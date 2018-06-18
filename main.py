@@ -9,13 +9,13 @@ from PIL import Image
 epochs = 400
 train_size = 9702
 input_max = 64
+res_id = 3000
 
 
 def data_iterator():
     idxs = np.arange(train_size)
 
     while True:
-        np.random.shuffle(idxs)
         for idx in idxs:
             im = Image.open('dataset/' + str(idx) + '.jpg')
 
@@ -42,7 +42,11 @@ def data_iterator():
 
             im = torch.Tensor(im)
             gray = torch.Tensor(gray)
-            yield gray, im
+
+            if idx == res_id:
+                yield gray, im, True
+            else:
+                yield gray, im, False
 
 
 def grayify(X):
@@ -63,7 +67,7 @@ for epoch in range(epochs):
     running_loss = 0
     for step in range(train_size):
         optimizer.zero_grad()
-        inputs, targets = next(data)
+        inputs, targets, res = next(data)
 
         outputs = net(inputs)
         loss = criterion(outputs, targets, inputs)
@@ -71,16 +75,16 @@ for epoch in range(epochs):
         optimizer.step()
 
         running_loss += loss.item()
-        if step % 10 == 0:
+        if step % 1 == 0:
             print(f'epoch : {epoch} step : {step} loss : {loss}')
             running_loss = 0
 
-    if epoch < 20 or epoch % 50 == 49:
-        outputs = outputs[0]
-        outputs *= 255
-        outputs = outputs.view((outputs.size(1), outputs.size(2), outputs.size(0)))
-        outputs = outputs.detach().numpy().astype(np.uint8)
-        im = Image.fromarray(outputs)
-        im.save('res/' + str(epoch) + '.jpg')
+        if res:
+            outputs = outputs[0]
+            outputs *= 255
+            outputs = outputs.view((outputs.size(1), outputs.size(2), outputs.size(0)))
+            outputs = outputs.detach().numpy().astype(np.uint8)
+            im = Image.fromarray(outputs)
+            im.save('res/' + str(epoch) + '.jpg')
 
     torch.save(net, 'net.pt')
