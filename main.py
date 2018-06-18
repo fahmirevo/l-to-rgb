@@ -76,6 +76,7 @@ for epoch in range(epochs):
 
         running_loss += loss.item()
         if step % 128 == 0:
+            running_loss /= 128
             print(f'epoch : {epoch} step : {step} loss : {loss}')
             running_loss = 0
 
