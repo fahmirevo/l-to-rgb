@@ -161,11 +161,11 @@ class SqueezeGAN(nn.Module):
         self.encoder = Encoder(in_planes)
 
         self.transformer = nn.Sequential(
-            nn.Dropout(0.5),
+            nn.Dropout(0.4),
             ResBlock(128, 128),
             ResBlock(128, 128),
             ResBlock(128, 128),
-            nn.Dropout(0.5)
+            nn.Dropout(0.1)
         )
 
         self.decoder = Decoder()
