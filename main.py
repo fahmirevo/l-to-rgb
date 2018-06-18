@@ -75,7 +75,7 @@ for epoch in range(epochs):
         optimizer.step()
 
         running_loss += loss.item()
-        if step % 1 == 0:
+        if step % 128 == 0:
             print(f'epoch : {epoch} step : {step} loss : {loss}')
             running_loss = 0
 
