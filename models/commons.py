@@ -13,9 +13,9 @@ class Fire(nn.Module):
         self.e3x3 = nn.Conv2d(s1x1_planes, e3x3_planes,
                               kernel_size=3, padding=1)
 
-        self.s1x1_activation = nn.ReLU(inplace=True)
-        self.e1x1_activation = nn.ReLU(inplace=True)
-        self.e3x3_activation = nn.ReLU(inplace=True)
+        self.s1x1_activation = nn.LeakyReLU(inplace=True)
+        self.e1x1_activation = nn.LeakyReLU(inplace=True)
+        self.e3x3_activation = nn.LeakyReLU(inplace=True)
 
     def forward(self, X):
         X = self.s1x1_activation(self.s1x1(X))
@@ -33,8 +33,6 @@ class DeFire(nn.Module):
         super().__init__()
 
         self.split_planes = in_planes // 2
-        # self.e1x1_planes = e1x1_planes
-        # self.e3x3_planes = e3x3_planes
 
         self.e1x1 = nn.ConvTranspose2d(self.split_planes, e1x1_planes, kernel_size=1)
         self.e3x3 = nn.ConvTranspose2d(self.split_planes, e3x3_planes,
@@ -42,9 +40,9 @@ class DeFire(nn.Module):
         self.s1x1 = nn.ConvTranspose2d(e1x1_planes + e3x3_planes,
                             s1x1_planes, kernel_size=1)
 
-        self.e1x1_activation = nn.ReLU(inplace=True)
-        self.e3x3_activation = nn.ReLU(inplace=True)
-        self.s1x1_activation = nn.ReLU(inplace=True)
+        self.e1x1_activation = nn.LeakyReLU(inplace=True)
+        self.e3x3_activation = nn.LeakyReLU(inplace=True)
+        self.s1x1_activation = nn.LeakyReLU(inplace=True)
 
     def forward(self, X):
         res1 = self.e1x1_activation(self.e1x1(X[:, :self.split_planes]))
@@ -68,7 +66,7 @@ class ResBlock(nn.Module):
                       kernel_size=3, padding=1),
         )
 
-        self.activation = nn.ReLU(inplace=True)
+        self.activation = nn.LeakyReLU(inplace=True)
 
     def forward(self, X):
         X = self.conv_block(X) + X

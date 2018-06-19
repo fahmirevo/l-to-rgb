@@ -9,7 +9,6 @@ def data_iterator(train_size, input_max, monitor=False, monitor_list=None):
 
     while True:
         for idx in idxs:
-            # im = Image.open('dataset/3923.jpg')
             im = Image.open('dataset/' + str(idx) + '.jpg')
 
             if im.mode != 'RGB':

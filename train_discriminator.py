@@ -8,10 +8,15 @@ import numpy as np
 epochs = 400
 train_size = 9702
 input_max = 64
+n_classes = 1
 
-net = discriminator.SqueezeNet(3, 2)
+net = discriminator.SqueezeNet(3, n_classes)
 optimizer = optim.Adam(net.parameters())
-criterion = nn.BCELoss()
+
+if n_classes > 1:
+    criterion = nn.BCELoss()
+else:
+    criterion = nn.MSELoss()
 
 
 class Augmentor:
@@ -21,6 +26,11 @@ class Augmentor:
 
     def __next__(self):
         _, real = next(self.generator)
+
+        is_real = np.random.random() < 0.5
+        if is_real:
+            target = torch.Tensor([[1]])
+            return real, target
 
         noise_lvl = np.random.random()
         noise = np.random.random(real.shape)
@@ -38,15 +48,8 @@ class Augmentor:
         fake = real + torch.Tensor(noise)
         fake[fake > 1] = 1
 
-        seq = np.random.random()
-        if seq < 0.5:
-            inputs = torch.cat([real, fake])
-            targets = torch.Tensor([[1, 0], [0, 1]])
-        else:
-            inputs = torch.cat([fake, real])
-            targets = torch.Tensor([[0, 1], [1, 0]])
-
-        return inputs, targets
+        target = torch.Tensor([[0]])
+        return fake, target
 
 
 data = Augmentor(data_iterator)
@@ -54,7 +57,7 @@ data = Augmentor(data_iterator)
 
 for epoch in range(epochs):
     running_loss = 0
-    for step in range(train_size * 10):
+    for step in range(train_size * 2):
         optimizer.zero_grad()
         inputs, targets = next(data)
 

@@ -1,4 +1,6 @@
-from squeezegan import SqueezeGAN
+from models.squeezegan import SqueezeGAN
+from models.discriminator import SqueezeNet
+from data import data_iterator
 import torch.optim as optim
 import torch.nn as nn
 import torch
@@ -8,53 +10,59 @@ import torchvision.transforms as transforms
 
 
 epochs = 400
-# train_size = 9702
-train_size = 1
+train_size = 9702
 input_max = 64
-# res_id = 3000
-res_id = 0
+monitor_list = [3000, 3923, 3548, 3544, 2734, 2434, 1434, 8149, 8359]
 
 
-def grayify(X):
-    Y = 0.299 * X[:, 0] + 0.587 * X[:, 1] + 0.114 * X[:, 2]
-    return Y.view((Y.size(0), 1, Y.size(1), Y.size(2)))
+def train_d(discriminator, inputs, targets, optimizer, criterion=nn.BCELoss()):
+    optimizer.zero_grad()
+    outputs = discriminator(inputs)
+    loss = criterion(outputs, targets)
+    loss.backward()
+    optimizer.step()
+    optimizer.zero_grad()
+
+    return outputs
 
 
-def criterion(X, Y, Z, discriminator=nn.MSELoss(), distance=nn.MSELoss()):
-    return 0.5 (10 * discriminator(X, Y) + 20 * distance(grayify(X), Z)) ** 2
+def train_g(generator, outputs, d_pred, optimizer, criterion=nn.BCELoss()):
+    optimizer.zero_grad()
+    loss = criterion(d_pred, torch.Tensor[[0, 1]])
+    loss.backward()
+    optimizer.step()
+    optimizer.zero_grad()
+
+    print(loss.items())
 
 
-net = SqueezeGAN()
-optimizer = optim.Adam(net.parameters())
-data = data_iterator()
+g = SqueezeGAN()
+g_optim = optim.Adam(g.parameters())
+
+d = SqueezeNet(3, 3)
+d_optim = optim.Adam(d.parameters())
+
+data = data_iterator(train_size, input_max,
+                     monitor=True, monitor_list=monitor_list)
 
 for epoch in range(epochs):
 
     running_loss = 0
     for step in range(train_size * 10):
-        optimizer.zero_grad()
-        inputs, targets, res = next(data)
+        g_optim.zero_grad()
+        d_optim.zero_grad()
+        inputs, reals, res = next(data)
 
-        outputs = net(inputs)
-        loss = criterion(outputs, targets, inputs)
-        loss.backward()
-        optimizer.step()
+        train_d(d, reals, torch.Tensor([[1, 0]]), d_optim)
 
-        running_loss += loss.item()
-        # if step % 128 == 0:
-            # running_loss /= 128
-        print(f'epoch : {epoch} step : {step} loss : {loss}')
-        running_loss = 0
+        generated = g(inputs)
+
+        d_pred = train_d(d, generated, torch.Tensor([[0, 1]]), d_optim)
+
+        train_g(g, generated, d_pred, g_optim)
 
         if res:
             to_pil = transforms.ToPILImage()
-            outputs = outputs[0]
-            # outputs *= 255
-            # outputs = outputs.view((outputs.size(1), outputs.size(2), outputs.size(0)))
-            # outputs = outputs.view((outputs.size(1), outputs.size(2)))
-            # outputs = outputs.detach().numpy().astype(np.uint8)
-            # im = Image.fromarray(outputs)
-            im = to_pil(outputs)
-            im.save('res/' + str(epoch) + '.jpg')
-
-    torch.save(net, 'net.pt')
+            generated = generated[0]
+            im = to_pil(generated)
+            im.save('res/' + str(epoch) + str(step) + '.jpg')
