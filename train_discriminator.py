@@ -70,7 +70,7 @@ for epoch in range(epochs):
 
         if step % 128 == 0:
             running_loss /= 128
-            print(f'epoch : {epoch} step : {step} loss : {loss}')
+            print(f'epoch : {epoch} step : {step} loss : {running_loss}')
             running_loss = 0
 
 torch.save(net, 'net.pt')
