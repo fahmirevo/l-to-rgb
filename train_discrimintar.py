@@ -23,16 +23,20 @@ class Augmentor:
         _, real = next(self.generator)
 
         noise_lvl = np.random.random()
-        if noise_lvl < 0.4:
-            noise = np.random.random(real.shape) ** 3
+        noise = np.random.random(real.shape)
+        if noise_lvl < 0.1:
+            noise **= 3
             mask = np.random.random(real.shape) < np.random.random()
             noise[mask] = 0
-        elif noise_lvl < 0.7:
-            noise = np.random.random(real.shape) ** 3
+        elif noise_lvl < 0.3:
+            noise **= 3
+        elif noise_lvl < 0.6:
+            noise **= 2
         else:
-            noise = np.random.random(real.shape) ** 2
+            pass
 
         fake = real + torch.Tensor(noise)
+        fake[fake > 1] = 1
 
         seq = np.random.random()
         if seq < 0.5:
