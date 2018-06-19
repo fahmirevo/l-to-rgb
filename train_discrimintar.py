@@ -23,7 +23,11 @@ class Augmentor:
         _, real = next(self.generator)
 
         noise_lvl = np.random.random()
-        if noise_lvl < 0.5:
+        if noise_lvl < 0.4:
+            noise = np.random.random(real.shape) ** 3
+            mask = np.random.random(real.shape) < np.random.random()
+            noise[mask] = 0
+        elif noise_lvl < 0.7:
             noise = np.random.random(real.shape) ** 3
         else:
             noise = np.random.random(real.shape) ** 2
@@ -57,8 +61,29 @@ for epoch in range(epochs):
 
         running_loss += loss.item()
 
-        # if step % 128 == 0:
-        #     running_loss /= 128
+        if step % 128 == 0:
+            running_loss /= 128
+            print(f'epoch : {epoch} step : {step} loss : {loss}')
+            running_loss = 0
 
-        print(f'epoch : {epoch} step : {step} loss : {loss}')
-        running_loss = 0
+torch.save(net, 'net.pt')
+
+for epoch in range(epochs):
+    running_loss = 0
+    for step in range(train_size * 10):
+        optimizer.zero_grad()
+        inputs, targets = next(data)
+
+        outputs = net(inputs)
+        loss = criterion(outputs, targets)
+        loss.backward()
+        optimizer.step()
+
+        running_loss += loss.item()
+
+        if step % 128 == 0:
+            running_loss /= 128
+            print(f'over epoch : {epoch} step : {step} loss : {loss}')
+            running_loss = 0
+
+torch.save(net, 'overnet.pt')
