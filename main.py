@@ -4,49 +4,15 @@ import torch.nn as nn
 import torch
 import numpy as np
 from PIL import Image
+import torchvision.transforms as transforms
 
 
 epochs = 400
-train_size = 9702
+# train_size = 9702
+train_size = 1
 input_max = 64
-res_id = 3000
-
-
-def data_iterator():
-    idxs = np.arange(train_size)
-
-    while True:
-        for idx in idxs:
-            im = Image.open('dataset/' + str(idx) + '.jpg')
-
-            width, height = im.size
-            if width > height:
-                ratio = input_max / width
-                im = im.resize((input_max, int(ratio * height)))
-            else:
-                ratio = input_max / height
-                im = im.resize((int(ratio * width), input_max))
-
-            gray = im.convert('L')
-
-            im = np.array(im) / 255
-            gray = np.array(gray) / 255
-
-            try:
-                im = im.reshape((1, 3) + im.shape[:2])
-            except Exception as e:
-                print(e)
-                continue
-
-            gray = gray.reshape((1, 1) + gray.shape)
-
-            im = torch.Tensor(im)
-            gray = torch.Tensor(gray)
-
-            if idx == res_id:
-                yield gray, im, True
-            else:
-                yield gray, im, False
+# res_id = 3000
+res_id = 0
 
 
 def grayify(X):
@@ -55,7 +21,7 @@ def grayify(X):
 
 
 def criterion(X, Y, Z, discriminator=nn.MSELoss(), distance=nn.MSELoss()):
-    return discriminator(X, Y) + 10 * distance(grayify(X), Z)
+    return 0.5 (10 * discriminator(X, Y) + 20 * distance(grayify(X), Z)) ** 2
 
 
 net = SqueezeGAN()
@@ -65,7 +31,7 @@ data = data_iterator()
 for epoch in range(epochs):
 
     running_loss = 0
-    for step in range(train_size):
+    for step in range(train_size * 10):
         optimizer.zero_grad()
         inputs, targets, res = next(data)
 
@@ -75,17 +41,20 @@ for epoch in range(epochs):
         optimizer.step()
 
         running_loss += loss.item()
-        if step % 128 == 0:
-            running_loss /= 128
-            print(f'epoch : {epoch} step : {step} loss : {loss}')
-            running_loss = 0
+        # if step % 128 == 0:
+            # running_loss /= 128
+        print(f'epoch : {epoch} step : {step} loss : {loss}')
+        running_loss = 0
 
         if res:
+            to_pil = transforms.ToPILImage()
             outputs = outputs[0]
-            outputs *= 255
-            outputs = outputs.view((outputs.size(1), outputs.size(2), outputs.size(0)))
-            outputs = outputs.detach().numpy().astype(np.uint8)
-            im = Image.fromarray(outputs)
+            # outputs *= 255
+            # outputs = outputs.view((outputs.size(1), outputs.size(2), outputs.size(0)))
+            # outputs = outputs.view((outputs.size(1), outputs.size(2)))
+            # outputs = outputs.detach().numpy().astype(np.uint8)
+            # im = Image.fromarray(outputs)
+            im = to_pil(outputs)
             im.save('res/' + str(epoch) + '.jpg')
 
     torch.save(net, 'net.pt')
