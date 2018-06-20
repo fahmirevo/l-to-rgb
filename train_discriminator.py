@@ -101,7 +101,7 @@ if __name__ == '__main__':
             nn.utils.clip_grad_norm_(net.parameters(), clip)
             optimizer.step()
 
-            print(output)
+            # print(output)
             # print(loss.item())
 
             # if step % 20 == 19:
