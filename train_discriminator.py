@@ -17,7 +17,7 @@ display_step = switch_size * 2
 net = discriminator.SqueezeNet(3, n_classes)
 optimizer = optim.Adam(net.parameters())
 
-criterion = nn.BCELoss()
+criterion = nn.MSELoss()
 
 
 def switch_generator(switch_size):
@@ -71,7 +71,7 @@ class Augmentor:
             fake[fake > 1] = 1
             fake[fake < 0] = 0
 
-        target = torch.Tensor([[0]])
+        target = torch.Tensor([[-1]])
         return fake, target
 
 
@@ -100,7 +100,7 @@ if __name__ == '__main__':
                 print(f'epoch : {epoch} step : {step} loss : {running_loss}')
                 running_loss = 0
 
-    torch.save(net, 'net.pt')
+    torch.save(net, 'd.pt')
 
     # for epoch in range(epochs):
     #     running_loss = 0
