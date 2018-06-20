@@ -25,8 +25,8 @@ class SqueezeNet(nn.Module):
 
         self.classifier = nn.Sequential(
             nn.Dropout(p=0.5),
-            # nn.Conv2d(256, n_classes, kernel_size=1),
-            nn.Conv2d(64, n_classes, kernel_size=1),
+            nn.Conv2d(256, n_classes, kernel_size=1),
+            # nn.Conv2d(64, n_classes, kernel_size=1),
             nn.LeakyReLU(inplace=True),
         )
 
