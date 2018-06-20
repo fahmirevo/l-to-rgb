@@ -33,7 +33,7 @@ class SqueezeNet(nn.Module):
         if n_classes > 1:
             self.final_activation = nn.Softmax(dim=1)
         else:
-            self.final_activation = nn.Sigmoid()
+            self.final_activation = nn.Tanh()
 
     def forward(self, X):
         X = self.features(X)
