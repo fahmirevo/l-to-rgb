@@ -9,25 +9,25 @@ class SqueezeNet(nn.Module):
         self.features = nn.Sequential(
             nn.Conv2d(in_planes, 32, kernel_size=3, stride=2),
             nn.LeakyReLU(inplace=True),
-            nn.AvgPool2d(kernel_size=3),
+            nn.AvgPool2d(kernel_size=2),
             Fire(32, 16, 32, 32),
             Fire(64, 16, 32, 32),
-            nn.AvgPool2d(kernel_size=3),
-            Fire(64, 32, 64, 64),
-            Fire(128, 32, 64, 64),
-            Fire(128, 32, 64, 64),
-            nn.AvgPool2d(kernel_size=3, padding=1, stride=1),
-            Fire(128, 64, 128, 128),
-            Fire(256, 64, 128, 128),
-            Fire(256, 64, 128, 128),
-            nn.AvgPool2d(kernel_size=3, padding=1, stride=1),
+            nn.AvgPool2d(kernel_size=2),
+            # Fire(64, 32, 64, 64),
+            # Fire(128, 32, 64, 64),
+            # Fire(128, 32, 64, 64),
+            # nn.AvgPool2d(kernel_size=2),
+            # Fire(128, 64, 128, 128),
+            # Fire(256, 64, 128, 128),
+            # Fire(256, 64, 128, 128),
+            # nn.AvgPool2d(kernel_size=2),
         )
 
         self.classifier = nn.Sequential(
             nn.Dropout(p=0.5),
-            nn.Conv2d(256, n_classes, kernel_size=1),
+            # nn.Conv2d(256, n_classes, kernel_size=1),
+            nn.Conv2d(64, n_classes, kernel_size=1),
             nn.LeakyReLU(inplace=True),
-            nn.AvgPool2d(kernel_size=3, padding=1, stride=1),
         )
 
         if n_classes > 1:

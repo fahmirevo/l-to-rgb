@@ -5,48 +5,70 @@ from models import discriminator
 from data import data_iterator
 import numpy as np
 
-epochs = 400
+epochs = 100
 train_size = 9702
+# train_size = 10
 input_max = 64
 n_classes = 1
+switch_size = 32
+display_step = switch_size * 2
 
 net = discriminator.SqueezeNet(3, n_classes)
 optimizer = optim.Adam(net.parameters())
 
-if n_classes > 1:
-    criterion = nn.BCELoss()
-else:
-    criterion = nn.MSELoss()
+criterion = nn.BCELoss()
+
+
+def switch_generator(switch_size):
+    count = -switch_size
+
+    while True:
+        count += 1
+        if count > switch_size:
+            count = -switch_size
+
+        yield count
+
+
+def noise_lvl():
+    lvl = 1.05
+    next_lvl = 4096
+    count = 0
+
+    while True:
+        count += 1
+        if count % next_lvl == 0 and lvl > 0.05:
+            next_lvl += 1024
+            lvl -= 0.05
+
+        yield lvl
 
 
 class Augmentor:
 
     def __init__(self, generator):
         self.generator = generator(train_size, input_max)
+        self.noise_lvl = noise_lvl()
+        self.switch = switch_generator(switch_size)
 
     def __next__(self):
         _, real = next(self.generator)
 
-        is_real = np.random.random() < 0.5
-        if is_real:
+        if next(self.switch) <= 0:
             target = torch.Tensor([[1]])
             return real, target
 
-        noise_lvl = np.random.random()
-        noise = np.random.random(real.shape)
-        if noise_lvl < 0.1:
-            noise **= 3
-            mask = np.random.random(real.shape) < np.random.random()
-            noise[mask] = 0
-        elif noise_lvl < 0.3:
-            noise **= 3
-        elif noise_lvl < 0.6:
-            noise **= 2
-        else:
-            pass
+        noise_lvl = next(self.noise_lvl)
 
-        fake = real + torch.Tensor(noise)
-        fake[fake > 1] = 1
+        noise = np.random.random(real.shape)
+        if noise_lvl > 1:
+            fake = torch.Tensor(noise)
+        else:
+            noise[noise > noise_lvl] = 0.5
+            noise = 2 * noise - 1
+            fake = real + torch.Tensor(noise)
+            fake[fake > 1] = 1
+            fake[fake < 0] = 0
 
         target = torch.Tensor([[0]])
         return fake, target
@@ -54,43 +76,49 @@ class Augmentor:
 
 data = Augmentor(data_iterator)
 
+if __name__ == '__main__':
+    for epoch in range(epochs):
+        running_loss = 0
+        for step in range(train_size):
+            optimizer.zero_grad()
+            inputs, targets = next(data)
 
-for epoch in range(epochs):
-    running_loss = 0
-    for step in range(train_size * 2):
-        optimizer.zero_grad()
-        inputs, targets = next(data)
+            outputs = net(inputs)
+            loss = criterion(outputs, targets)
+            loss.backward()
+            optimizer.step()
 
-        outputs = net(inputs)
-        loss = criterion(outputs, targets)
-        loss.backward()
-        optimizer.step()
+            running_loss += loss.item()
 
-        running_loss += loss.item()
+            # print(outputs)
+            # print(loss.item())
 
-        if step % 128 == 0:
-            running_loss /= 128
-            print(f'epoch : {epoch} step : {step} loss : {running_loss}')
-            running_loss = 0
+            # if step % 20 == 19:
+            if step % display_step == display_step - 1:
+                running_loss /= display_step
+                print(f'epoch : {epoch} step : {step} loss : {running_loss}')
+                running_loss = 0
 
-torch.save(net, 'net.pt')
+    torch.save(net, 'net.pt')
 
-for epoch in range(epochs):
-    running_loss = 0
-    for step in range(train_size * 10):
-        optimizer.zero_grad()
-        inputs, targets = next(data)
+    # for epoch in range(epochs):
+    #     running_loss = 0
+    #     for step in range(train_size * 10):
+    #         optimizer.zero_grad()
+    #         inputs, targets = next(data)
 
-        outputs = net(inputs)
-        loss = criterion(outputs, targets)
-        loss.backward()
-        optimizer.step()
+    #         outputs = net(inputs)
+    #         loss = criterion(outputs, targets)
+    #         loss.backward()
+    #         optimizer.step()
 
-        running_loss += loss.item()
+    #         running_loss += loss.item()
 
-        if step % 128 == 0:
-            running_loss /= 128
-            print(f'over epoch : {epoch} step : {step} loss : {loss}')
-            running_loss = 0
+    #         print(loss.item())
 
-torch.save(net, 'overnet.pt')
+    #         if step % 128 == 0:
+    #             running_loss /= 128
+    #             print(f'over epoch : {epoch} step : {step} loss : {loss}')
+    #             running_loss = 0
+
+    # torch.save(net, 'overnet.pt')
