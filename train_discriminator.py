@@ -31,15 +31,15 @@ def switch_generator(switch_size):
         yield count
 
 
-def noise_lvl():
+def noise_lvl(train_size):
     lvl = 1.05
-    next_lvl = 4096
+    next_lvl = train_size * 4
     count = 0
 
     while True:
         count += 1
         if count % next_lvl == 0 and lvl > 0.05:
-            next_lvl += 1024
+            next_lvl += train_size * 2
             lvl -= 0.05
 
         yield lvl
@@ -49,7 +49,7 @@ class Augmentor:
 
     def __init__(self, generator):
         self.generator = generator(train_size, input_max)
-        self.noise_lvl = noise_lvl()
+        self.noise_lvl = noise_lvl(train_size)
         self.switch = switch_generator(switch_size)
 
     def __next__(self):

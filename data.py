@@ -36,7 +36,7 @@ def data_iterator(train_size, input_max, monitor=False, monitor_list=None):
 
 def curriculum_iterator(train_size, *args, **kwargs):
     portion = 0.1
-    step_per_lvl = 4096
+    step_per_lvl = train_size * 3
     while True:
         chunk_size = round(train_size * portion)
         generator = data_iterator(chunk_size, *args, **kwargs)
@@ -44,7 +44,7 @@ def curriculum_iterator(train_size, *args, **kwargs):
         for i in range(step_per_lvl):
             yield next(generator)
 
-    step_per_lvl += 1028
+    step_per_lvl += train_size * 2
     if portion < 1:
         portion += 0.1
 
