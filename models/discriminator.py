@@ -13,14 +13,14 @@ class SqueezeNet(nn.Module):
             Fire(32, 16, 32, 32),
             Fire(64, 16, 32, 32),
             nn.AvgPool2d(kernel_size=2),
-            # Fire(64, 32, 64, 64),
-            # Fire(128, 32, 64, 64),
-            # Fire(128, 32, 64, 64),
-            # nn.AvgPool2d(kernel_size=2),
-            # Fire(128, 64, 128, 128),
-            # Fire(256, 64, 128, 128),
-            # Fire(256, 64, 128, 128),
-            # nn.AvgPool2d(kernel_size=2),
+            Fire(64, 32, 64, 64),
+            Fire(128, 32, 64, 64),
+            Fire(128, 32, 64, 64),
+            nn.AvgPool2d(kernel_size=2),
+            Fire(128, 64, 128, 128),
+            Fire(256, 64, 128, 128),
+            Fire(256, 64, 128, 128),
+            nn.AvgPool2d(kernel_size=2),
         )
 
         self.classifier = nn.Sequential(
