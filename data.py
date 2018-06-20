@@ -8,6 +8,7 @@ def data_iterator(train_size, input_max, monitor=False, monitor_list=None):
     to_tensor = transforms.ToTensor()
 
     while True:
+        np.random.shuffle(idxs)
         for idx in idxs:
             im = Image.open('dataset/' + str(idx) + '.jpg')
 
@@ -34,15 +35,22 @@ def data_iterator(train_size, input_max, monitor=False, monitor_list=None):
                 yield gray, im
 
 
-def curriculum_iterator(train_size, *args, **kwargs):
-    portion = 0.1
+def curriculum_iterator(train_size, batch_size, *args, **kwargs):
+    portion = 0.05
     step_per_lvl = train_size * 3
     while True:
         chunk_size = round(train_size * portion)
         generator = data_iterator(chunk_size, *args, **kwargs)
 
         for i in range(step_per_lvl):
-            yield next(generator)
+            gray_batch = []
+            im_batch = []
+            for _ in range(batch_size):
+                gray, im = next(generator)
+                gray_batch.append(gray)
+                im_batch.append(im)
+
+            yield gray_batch, im_batch
 
     step_per_lvl += train_size * 2
     if portion < 1:
