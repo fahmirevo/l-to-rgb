@@ -2,7 +2,7 @@ import torch
 import torch.nn as nn
 import torch.optim as optim
 from models import discriminator
-from data import data_iterator
+from data import curriculum_iterator
 import numpy as np
 
 epochs = 100
@@ -10,7 +10,8 @@ train_size = 9702
 # train_size = 10
 input_max = 64
 n_classes = 1
-switch_size = 32
+switch_size = 8
+# switch_size = 6
 display_step = switch_size * 2
 
 net = discriminator.SqueezeNet(3, n_classes)
@@ -74,7 +75,7 @@ class Augmentor:
         return fake, target
 
 
-data = Augmentor(data_iterator)
+data = Augmentor(curriculum_iterator)
 
 if __name__ == '__main__':
     for epoch in range(epochs):
