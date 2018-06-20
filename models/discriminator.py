@@ -7,7 +7,7 @@ class SqueezeNet(nn.Module):
     def __init__(self, in_planes=3, n_classes=10):
         super().__init__()
         self.features = nn.Sequential(
-            nn.Conv2d(in_planes, 32, kernel_size=3, stride=2),
+            nn.Conv2d(in_planes, 32, kernel_size=3, stride=1),
             nn.LeakyReLU(inplace=True),
             nn.AvgPool2d(kernel_size=2),
             Fire(32, 16, 32, 32),
